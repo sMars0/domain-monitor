@@ -57,6 +57,12 @@
                                             <div class="flex items-center gap-3">
                                                 <a href="{{ route('domains.show', $domain) }}" class="text-indigo-600 hover:text-indigo-900">{{ __('View') }}</a>
                                                 <a href="{{ route('domains.edit', $domain) }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Edit') }}</a>
+                                                <form method="POST" action="{{ route('domains.check', $domain) }}">
+                                                    @csrf
+                                                    <button type="submit" class="text-indigo-600 hover:text-indigo-900">
+                                                        {{ __('Check now') }}
+                                                    </button>
+                                                </form>
                                                 <form method="POST" action="{{ route('domains.destroy', $domain) }}">
                                                     @csrf
                                                     @method('DELETE')

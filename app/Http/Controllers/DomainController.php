@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreDomainRequest;
 use App\Http\Requests\UpdateDomainRequest;
+use App\Jobs\CheckDomainJob;
 use App\Models\Domain;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -78,6 +79,17 @@ class DomainController extends Controller
         return redirect()
             ->route('domains.index')
             ->with('status', 'domain-deleted');
+    }
+
+    public function check(Domain $domain): RedirectResponse
+    {
+        $this->authorizeDomainOwner($domain);
+
+        CheckDomainJob::dispatch($domain->id);
+
+        return redirect()
+            ->route('domains.show', $domain)
+            ->with('status', 'Domain check has been queued.');
     }
 
     private function authorizeDomainOwner(Domain $domain): void

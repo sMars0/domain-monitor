@@ -13,6 +13,7 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+    Route::post('/domains/{domain}/check', [DomainController::class, 'check'])->name('domains.check');
     Route::resource('domains', DomainController::class);
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
