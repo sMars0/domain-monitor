@@ -30,6 +30,7 @@ class DomainCheckService
         $domain->update([
             'last_status' => $status,
             'last_checked_at' => $checkedAt,
+            'check_queued_at' => null,
         ]);
 
         if ($previousStatus === 'up' && $status === 'down') {

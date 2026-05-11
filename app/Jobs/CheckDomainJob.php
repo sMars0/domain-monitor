@@ -6,6 +6,7 @@ use App\Models\Domain;
 use App\Services\Monitoring\DomainCheckService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Throwable;
 
 class CheckDomainJob implements ShouldQueue
 {
@@ -20,10 +21,29 @@ class CheckDomainJob implements ShouldQueue
     {
         $domain = Domain::find($this->domainId);
 
-        if ($domain === null || ! $domain->is_active) {
+        if ($domain === null) {
             return;
         }
 
-        $domainCheckService->check($domain);
+        if (! $domain->is_active) {
+            $this->resetQueuedAt($domain);
+
+            return;
+        }
+
+        try {
+            $domainCheckService->check($domain);
+        } catch (Throwable $exception) {
+            $this->resetQueuedAt($domain);
+
+            report($exception);
+        }
+    }
+
+    private function resetQueuedAt(Domain $domain): void
+    {
+        $domain->forceFill([
+            'check_queued_at' => null,
+        ])->save();
     }
 }

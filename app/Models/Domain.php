@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'is_active',
     'last_status',
     'last_checked_at',
+    'check_queued_at',
 ])]
 class Domain extends Model
 {
@@ -40,6 +41,7 @@ class Domain extends Model
         return [
             'is_active' => 'boolean',
             'last_checked_at' => 'datetime',
+            'check_queued_at' => 'datetime',
             'check_interval' => 'integer',
             'timeout' => 'integer',
         ];

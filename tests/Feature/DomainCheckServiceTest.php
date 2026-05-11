@@ -29,6 +29,7 @@ class DomainCheckServiceTest extends TestCase
             'timeout' => 10,
             'is_active' => true,
             'last_status' => 'down',
+            'check_queued_at' => now(),
         ]);
 
         $domainCheck = app(DomainCheckService::class)->check($domain);
@@ -39,6 +40,7 @@ class DomainCheckServiceTest extends TestCase
         $this->assertNotNull($domainCheck->checked_at);
         $this->assertSame('up', $domain->refresh()->last_status);
         $this->assertNotNull($domain->last_checked_at);
+        $this->assertNull($domain->check_queued_at);
         $this->assertDatabaseHas('domain_checks', [
             'domain_id' => $domain->id,
             'status' => 'up',
