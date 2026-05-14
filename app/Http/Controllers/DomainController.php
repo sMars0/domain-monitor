@@ -40,7 +40,7 @@ class DomainController extends Controller
 
     public function show(Domain $domain): View
     {
-        $this->authorizeDomainOwner($domain);
+        $this->authorize('view', $domain);
 
         $checks = $domain->checks()
             ->latest('checked_at')
@@ -54,7 +54,7 @@ class DomainController extends Controller
 
     public function edit(Domain $domain): View
     {
-        $this->authorizeDomainOwner($domain);
+        $this->authorize('update', $domain);
 
         return view('domains.edit', [
             'domain' => $domain,
@@ -63,6 +63,8 @@ class DomainController extends Controller
 
     public function update(UpdateDomainRequest $request, Domain $domain): RedirectResponse
     {
+        $this->authorize('update', $domain);
+
         $domain->update($request->validated());
 
         return redirect()
@@ -72,7 +74,7 @@ class DomainController extends Controller
 
     public function destroy(Domain $domain): RedirectResponse
     {
-        $this->authorizeDomainOwner($domain);
+        $this->authorize('delete', $domain);
 
         $domain->delete();
 
@@ -83,17 +85,12 @@ class DomainController extends Controller
 
     public function check(Domain $domain): RedirectResponse
     {
-        $this->authorizeDomainOwner($domain);
+        $this->authorize('check', $domain);
 
         CheckDomainJob::dispatch($domain->id);
 
         return redirect()
             ->route('domains.show', $domain)
-            ->with('status', 'Domain check has been queued.');
-    }
-
-    private function authorizeDomainOwner(Domain $domain): void
-    {
-        abort_unless($domain->user_id === request()->user()->id, 403);
+            ->with('status', 'domain-check-queued');
     }
 }

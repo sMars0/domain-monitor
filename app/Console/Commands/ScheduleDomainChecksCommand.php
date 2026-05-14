@@ -6,7 +6,6 @@ use App\Jobs\CheckDomainJob;
 use App\Models\Domain;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
 
 class ScheduleDomainChecksCommand extends Command
 {
@@ -29,22 +28,33 @@ class ScheduleDomainChecksCommand extends Command
      */
     public function handle(): int
     {
-        $now = now();
+        $now = Carbon::now();
         $queuedBefore = $now->copy()->subMinutes(10);
+        $dispatched = 0;
 
-        $dueDomains = Domain::query()
+        // Use lazy() to avoid loading all domains into memory at once.
+        Domain::query()
             ->where('is_active', true)
             ->where(function ($query) use ($queuedBefore): void {
                 $query
                     ->whereNull('check_queued_at')
                     ->orWhere('check_queued_at', '<=', $queuedBefore);
             })
-            ->get()
-            ->filter(fn (Domain $domain): bool => $this->domainIsDue($domain, $now));
+            ->lazy()
+            ->each(function (Domain $domain) use ($now, &$dispatched): void {
+                if (! $this->domainIsDue($domain, $now)) {
+                    return;
+                }
 
-        $dispatched = $this->dispatchDueChecks($dueDomains, $now);
+                $domain->forceFill([
+                    'check_queued_at' => $now,
+                ])->save();
 
-        $this->info("Due domains found: {$dueDomains->count()}");
+                CheckDomainJob::dispatch($domain->id);
+
+                $dispatched++;
+            });
+
         $this->info("Jobs dispatched: {$dispatched}");
 
         return self::SUCCESS;
@@ -56,25 +66,5 @@ class ScheduleDomainChecksCommand extends Command
             || $domain->last_checked_at->lessThanOrEqualTo(
                 $now->copy()->subMinutes($domain->check_interval)
             );
-    }
-
-    /**
-     * @param Collection<int, Domain> $domains
-     */
-    private function dispatchDueChecks(Collection $domains, Carbon $queuedAt): int
-    {
-        $dispatched = 0;
-
-        foreach ($domains as $domain) {
-            $domain->forceFill([
-                'check_queued_at' => $queuedAt,
-            ])->save();
-
-            CheckDomainJob::dispatch($domain->id);
-
-            $dispatched++;
-        }
-
-        return $dispatched;
     }
 }

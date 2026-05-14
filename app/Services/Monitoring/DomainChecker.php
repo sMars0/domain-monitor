@@ -14,8 +14,16 @@ class DomainChecker
         $startedAt = hrtime(true);
 
         try {
-            $response = Http::timeout($domain->timeout)
-                ->send($domain->method, $domain->url);
+            $request = Http::timeout($domain->timeout)
+                ->maxRedirects(5);
+
+            // For GET requests, stream and discard the body to avoid buffering
+            // potentially large responses — we only care about the status code.
+            if ($domain->method === 'GET') {
+                $request = $request->withoutBody();
+            }
+
+            $response = $request->send($domain->method, $domain->url);
 
             $responseTimeMs = $this->elapsedMilliseconds($startedAt);
             $httpCode = $response->status();

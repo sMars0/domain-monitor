@@ -6,6 +6,7 @@ use App\Models\Domain;
 use App\Rules\SafeMonitoringUrl;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateDomainRequest extends FormRequest
 {
@@ -38,13 +39,34 @@ class UpdateDomainRequest extends FormRequest
      */
     public function rules(): array
     {
+        /** @var Domain $domain */
+        $domain = $this->route('domain');
+
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'url' => ['required', 'url', 'starts_with:http://,https://', new SafeMonitoringUrl],
-            'method' => ['required', 'in:GET,HEAD'],
+            'name'           => ['required', 'string', 'max:255'],
+            'url'            => [
+                'required',
+                'url',
+                'starts_with:http://,https://',
+                new SafeMonitoringUrl,
+                Rule::unique('domains')
+                    ->where('user_id', $this->user()->id)
+                    ->ignore($domain->id),
+            ],
+            'method'         => ['required', 'in:GET,HEAD'],
             'check_interval' => ['required', 'integer', 'min:1', 'max:1440'],
-            'timeout' => ['required', 'integer', 'min:1', 'max:60'],
-            'is_active' => ['nullable', 'boolean'],
+            'timeout'        => ['required', 'integer', 'min:1', 'max:60'],
+            'is_active'      => ['nullable', 'boolean'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'url.unique' => 'This URL is already being monitored.',
         ];
     }
 }

@@ -1,4 +1,6 @@
 <x-app-layout>
+    <x-slot name="title">{{ __('Domains') }}</x-slot>
+
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
@@ -33,7 +35,7 @@
                                     <th class="px-3 py-2 font-medium">{{ __('Interval') }}</th>
                                     <th class="px-3 py-2 font-medium">{{ __('Timeout') }}</th>
                                     <th class="px-3 py-2 font-medium">{{ __('Active') }}</th>
-                                    <th class="px-3 py-2 font-medium">{{ __('Last Status') }}</th>
+                                    <th class="px-3 py-2 font-medium">{{ __('Status') }}</th>
                                     <th class="px-3 py-2 font-medium">{{ __('Last Checked') }}</th>
                                     <th class="px-3 py-2 font-medium">{{ __('Actions') }}</th>
                                 </tr>
@@ -43,16 +45,39 @@
                                     <tr>
                                         <td class="px-3 py-3 font-medium text-gray-900">{{ $domain->name }}</td>
                                         <td class="px-3 py-3 text-gray-600">
-                                            <a href="{{ $domain->url }}" class="text-indigo-600 hover:text-indigo-900" target="_blank" rel="noopener noreferrer">
+                                            <a href="{{ $domain->url }}" class="text-indigo-600 hover:text-indigo-900 truncate max-w-xs block" target="_blank" rel="noopener noreferrer">
                                                 {{ $domain->url }}
                                             </a>
                                         </td>
-                                        <td class="px-3 py-3 text-gray-600">{{ $domain->method }}</td>
-                                        <td class="px-3 py-3 text-gray-600">{{ $domain->check_interval }}</td>
-                                        <td class="px-3 py-3 text-gray-600">{{ $domain->timeout }}</td>
-                                        <td class="px-3 py-3 text-gray-600">{{ $domain->is_active ? __('Yes') : __('No') }}</td>
-                                        <td class="px-3 py-3 text-gray-600">{{ $domain->last_status }}</td>
-                                        <td class="px-3 py-3 text-gray-600">{{ $domain->last_checked_at?->format('Y-m-d H:i') ?? __('Never') }}</td>
+                                        <td class="px-3 py-3 text-gray-600">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                                                {{ $domain->method }}
+                                            </span>
+                                        </td>
+                                        <td class="px-3 py-3 text-gray-600">{{ $domain->check_interval }}&nbsp;{{ __('min') }}</td>
+                                        <td class="px-3 py-3 text-gray-600">{{ $domain->timeout }}&nbsp;{{ __('sec') }}</td>
+                                        <td class="px-3 py-3">
+                                            @if ($domain->is_active)
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">{{ __('Yes') }}</span>
+                                            @else
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500">{{ __('No') }}</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-3 py-3">
+                                            @php
+                                                $statusClasses = match($domain->last_status) {
+                                                    'up'   => 'bg-green-100 text-green-700',
+                                                    'down' => 'bg-red-100 text-red-700',
+                                                    default => 'bg-gray-100 text-gray-500',
+                                                };
+                                            @endphp
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $statusClasses }}">
+                                                {{ strtoupper($domain->last_status) }}
+                                            </span>
+                                        </td>
+                                        <td class="px-3 py-3 text-gray-600 whitespace-nowrap">
+                                            {{ $domain->last_checked_at?->format('Y-m-d H:i') ?? __('Never') }}
+                                        </td>
                                         <td class="px-3 py-3">
                                             <div class="flex items-center gap-3">
                                                 <a href="{{ route('domains.show', $domain) }}" class="text-indigo-600 hover:text-indigo-900">{{ __('View') }}</a>
@@ -77,6 +102,7 @@
                                     <tr>
                                         <td colspan="9" class="px-3 py-6 text-center text-gray-500">
                                             {{ __('No domains yet.') }}
+                                            <a href="{{ route('domains.create') }}" class="ml-2 text-indigo-600 hover:text-indigo-900">{{ __('Add one') }}</a>
                                         </td>
                                     </tr>
                                 @endforelse

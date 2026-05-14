@@ -4,17 +4,26 @@ namespace App\Jobs;
 
 use App\Models\Domain;
 use App\Services\Monitoring\DomainCheckService;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Throwable;
 
-class CheckDomainJob implements ShouldQueue
+class CheckDomainJob implements ShouldQueue, ShouldBeUnique
 {
     use Queueable;
 
     public function __construct(
         public readonly int $domainId,
     ) {
+    }
+
+    /**
+     * The unique ID of the job — prevents duplicate checks for the same domain.
+     */
+    public function uniqueId(): string
+    {
+        return (string) $this->domainId;
     }
 
     public function handle(DomainCheckService $domainCheckService): void

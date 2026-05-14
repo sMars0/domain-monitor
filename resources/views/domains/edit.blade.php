@@ -1,7 +1,9 @@
 <x-app-layout>
+    <x-slot name="title">{{ __('Edit Domain') }}</x-slot>
+
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Edit Domain') }}
+            {{ __('Edit Domain') }}: {{ $domain->name }}
         </h2>
     </x-slot>
 
@@ -35,14 +37,16 @@
 
                     <div class="grid gap-6 sm:grid-cols-2">
                         <div>
-                            <x-input-label for="check_interval" :value="__('Check Interval')" />
+                            <x-input-label for="check_interval" :value="__('Check Interval (minutes)')" />
                             <x-text-input id="check_interval" name="check_interval" type="number" min="1" max="1440" class="mt-1 block w-full" :value="old('check_interval', $domain->check_interval)" required />
+                            <p class="mt-1 text-xs text-gray-500">{{ __('1 to 1440 minutes') }}</p>
                             <x-input-error class="mt-2" :messages="$errors->get('check_interval')" />
                         </div>
 
                         <div>
-                            <x-input-label for="timeout" :value="__('Timeout')" />
+                            <x-input-label for="timeout" :value="__('Timeout (seconds)')" />
                             <x-text-input id="timeout" name="timeout" type="number" min="1" max="60" class="mt-1 block w-full" :value="old('timeout', $domain->timeout)" required />
+                            <p class="mt-1 text-xs text-gray-500">{{ __('1 to 60 seconds') }}</p>
                             <x-input-error class="mt-2" :messages="$errors->get('timeout')" />
                         </div>
                     </div>

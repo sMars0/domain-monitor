@@ -5,11 +5,23 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    $user = request()->user();
+    $domains = $user->domains()->get(['id', 'name', 'url', 'last_status', 'last_checked_at', 'is_active']);
+
+    $stats = [
+        'total'   => $domains->count(),
+        'up'      => $domains->where('last_status', 'up')->count(),
+        'down'    => $domains->where('last_status', 'down')->count(),
+        'unknown' => $domains->where('last_status', 'unknown')->count(),
+    ];
+
+    $downDomains = $domains->where('last_status', 'down')->take(5);
+
+    return view('dashboard', compact('stats', 'downDomains'));
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {

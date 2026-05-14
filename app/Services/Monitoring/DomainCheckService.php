@@ -20,25 +20,30 @@ class DomainCheckService
         $status = $result->isUp ? 'up' : 'down';
 
         $domainCheck = $domain->checks()->create([
-            'checked_at' => $checkedAt,
-            'status' => $status,
-            'http_code' => $result->httpCode,
+            'checked_at'       => $checkedAt,
+            'status'           => $status,
+            'http_code'        => $result->httpCode,
             'response_time_ms' => $result->responseTimeMs,
-            'error_message' => $result->errorMessage,
+            'error_message'    => $result->errorMessage,
         ]);
 
         $domain->update([
-            'last_status' => $status,
+            'last_status'     => $status,
             'last_checked_at' => $checkedAt,
             'check_queued_at' => null,
         ]);
 
+        // Email notifications are a planned bonus feature.
+        // To enable: implement App\Notifications\DomainDownNotification
+        // and App\Notifications\DomainRecoveredNotification,
+        // then call $domain->user->notify(...) in the blocks below.
+        // Configure MAIL_* variables in .env (or use a queue channel).
         if ($previousStatus === 'up' && $status === 'down') {
-            // TODO: Send a downtime notification.
+            // $domain->user->notify(new \App\Notifications\DomainDownNotification($domain, $domainCheck));
         }
 
         if ($previousStatus === 'down' && $status === 'up') {
-            // TODO: Send a recovery notification.
+            // $domain->user->notify(new \App\Notifications\DomainRecoveredNotification($domain, $domainCheck));
         }
 
         return $domainCheck;
