@@ -20,7 +20,7 @@ class DomainChecker
             // For GET requests, stream and discard the body to avoid buffering
             // potentially large responses — we only care about the status code.
             if ($domain->method === 'GET') {
-                $request = $request->withoutBody();
+                $request = $request->withOptions(['sink' => '/dev/null']);
             }
 
             $response = $request->send($domain->method, $domain->url);
